@@ -6,9 +6,9 @@ SimpleFileServer was created to address the need for serving local files for dev
 The fileserver is a single executable with the following features:
 - The port used is specified as an argument.
 - The root folder is specified as an argument. Only files relative to the specified root folder will be accessable.
-- Other MimeTypes are set based on the file extensions.
-- Uncommon MimeTypes can be added by supplying a JSON file (mime-types.json) containing the mapping from extensions to MimeTypes.
-- By default only URLs to localhost are allowed. If a hosts.json file containing an array of hosts is found these additional hosts will be added to the allowed list. If this file contains only a single host of "*" host filtering will be turned off.
+- The response content type is set based on the file extensions. Common MimeTypes for HTML, Javascript, CSS, JSON, text, and image files are predefined.
+- Additional MimeTypes can be added by supplying a JSON file (mime-types.json) containing the mapping from extensions to MimeTypes.
+- By default only URLs to localhost are allowed. If a hosts.json file containing an array of hosts is found these hosts will be added to the allowed list. If this file contains only a single host of "*" host filtering will be turned off.
 
 Use:
   SFS \<port\> \<root\>
