@@ -12,6 +12,9 @@ import (
 )
 
 var rootPath = ""
+
+var allowedHosts = []string{"localhost"}
+
 var mimeTypes = map[string]string{
 	"bin":  "application/octet-stream",
 	"bmp":  "image/bmp",
@@ -63,6 +66,22 @@ func main() {
 		}
 	}
 
+	var additionalHosts []string
+
+	if jsonData, err := os.ReadFile("hosts.json"); err == nil {
+		if json.Unmarshal([]byte(jsonData), &additionalHosts) == nil {
+			if len(additionalHosts) == 1 && additionalHosts[0] == "*" {
+				allowedHosts[0] = "*"
+				fmt.Printf("All hosts allowed\n")
+			} else {
+				allowedHosts = append(allowedHosts, additionalHosts...)
+				fmt.Printf("Hosts added\n")
+			}
+		} else {
+			fmt.Printf("Failed to add Hosts: %s\n", err)
+		}
+	}
+
 	http.HandleFunc("/", handleRequest)
 
 	fmt.Printf("Starting server\n")
@@ -78,6 +97,28 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	if len(allowedHosts) != 1 && allowedHosts[0] != "*" {
+		client := r.Header.Get("X-FORWARDED-FOR")
+		if client == "" {
+			client = r.RemoteAddr
+		}
+		if colonIndex := strings.Index(client, ":"); colonIndex != -1 {
+			client = client[0:colonIndex]
+		}
+
+		hostAllowed := false
+		for _, host := range allowedHosts {
+			if host == client {
+				hostAllowed = true
+				break
+			}
+		}
+		if !hostAllowed {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+	}
+
 	filename := r.RequestURI[1:]
 	filePath := rootPath + string(os.PathSeparator) + filename
 	if contents, err := os.ReadFile(filePath); err == nil {
@@ -87,9 +128,9 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add("Content-Type", mimeType)
 			}
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*://localhost:*/*")
 		w.Write(contents)
 	} else {
+		w.WriteHeader(http.StatusNotFound)
 		fmt.Printf("Error reading file: %s\n", err)
 	}
 }
