@@ -8,7 +8,7 @@ The fileserver is a single executable with the following features:
 - The root folder is specified as an argument. Only files relative to the specified root folder will be accessable.
 - Common MimeTypes are set based on the file extensions.
 - Uncommon MimeTypes can be added by supplying a JSON file (mime-types.json) containing the mapping from extensions to MimeTypes.
-- Only URLs containing localhost are allowed ("*://localhost:*/*").
+- By default only URLs to localhost are allowed. If a hosts.json file containing an array of hosts is found these additional hosts will be added to the allowed list. If this file contains only a single host of "*" host filtering will be turned off.
 
 Use:
   SFS \<port\> \<root\>
