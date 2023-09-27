@@ -33,7 +33,7 @@ import (
 
 var rootPath = ""
 
-var allowedHosts = []string{"localhost"}
+var allowedClients = []string{"localhost"}
 
 var mimeTypes = map[string]string{
 	"bin":  "application/octet-stream",
@@ -86,19 +86,19 @@ func main() {
 		}
 	}
 
-	var additionalHosts []string
+	var additionalClients []string
 
-	if jsonData, err := os.ReadFile("hosts.json"); err == nil {
-		if json.Unmarshal([]byte(jsonData), &additionalHosts) == nil {
-			if len(additionalHosts) == 1 && additionalHosts[0] == "*" {
-				allowedHosts[0] = "*"
-				fmt.Printf("All hosts allowed\n")
+	if jsonData, err := os.ReadFile("clients.json"); err == nil {
+		if json.Unmarshal([]byte(jsonData), &additionalClients) == nil {
+			if len(additionalClients) == 1 && additionalClients[0] == "*" {
+				allowedClients[0] = "*"
+				fmt.Printf("All clients allowed\n")
 			} else {
-				allowedHosts = append(allowedHosts, additionalHosts...)
-				fmt.Printf("Hosts added\n")
+				allowedClients = append(allowedClients, additionalClients...)
+				fmt.Printf("Clients added\n")
 			}
 		} else {
-			fmt.Printf("Failed to add Hosts: %s\n", err)
+			fmt.Printf("Failed to add Clients: %s\n", err)
 		}
 	}
 
@@ -117,7 +117,7 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
-	if len(allowedHosts) != 1 && allowedHosts[0] != "*" {
+	if len(allowedClients) != 1 && allowedClients[0] != "*" {
 		client := r.Header.Get("X-FORWARDED-FOR")
 		if client == "" {
 			client = r.RemoteAddr
@@ -126,14 +126,14 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			client = client[0:colonIndex]
 		}
 
-		hostAllowed := false
-		for _, host := range allowedHosts {
-			if host == client {
-				hostAllowed = true
+		clientAllowed := false
+		for _, allowedClient := range allowedClients {
+			if client == allowedClient {
+				clientAllowed = true
 				break
 			}
 		}
-		if !hostAllowed {
+		if !clientAllowed {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
